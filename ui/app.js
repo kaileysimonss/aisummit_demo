@@ -92,6 +92,10 @@ const isAboveCutoff = (probability) => probability >= SCREEN_CUTOFF;
 const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 const exampleLabel = (example) => example.label;
 
+// Colors: what the model found follows the score, and a speaker's true group follows the dataset's label.
+const findingTone = (probability) => (isAboveCutoff(probability) ? "tone-paralysis" : "tone-healthy");
+const groupTone = (example) => (example.group === "paralysis" ? "tone-paralysis" : "tone-healthy");
+
 /* ---------- Result panel ---------- */
 
 function scoreScale(probability) {
@@ -106,18 +110,18 @@ function scoreScale(probability) {
 
 function scoreBlock(probability, isSample = false) {
   const finding = isAboveCutoff(probability) ? "Vocal fold paralysis pattern detected" : "No vocal fold paralysis pattern detected";
-  return el("div", { class: "score" },
+  return el("div", { class: `score ${findingTone(probability)}` },
     el("div", { class: "score-row" },
       el("div", { class: "score-number" }, formatPercent(probability)),
       el("div", { class: "score-text" },
         el("div", { class: "score-finding" }, isSample ? `Sample output: ${finding.charAt(0).toLowerCase()}${finding.slice(1)}` : finding))),
     scoreScale(probability),
     el("p", { class: "score-explain" },
-      "How closely this voice resembles the paralysis group in the training data. It is not the chance that this person has paralysis."));
+      "How closely this voice resembles the paralysis group in the training data."));
 }
 
 function scoreTile(title, source, probability) {
-  return el("div", { class: "score-tile" },
+  return el("div", { class: `score-tile ${findingTone(probability)}` },
     el("div", { class: "score-tile-title" }, title),
     el("div", { class: "score-tile-source" }, source),
     el("div", { class: "score-number" }, formatPercent(probability)),
@@ -151,9 +155,7 @@ function renderExampleResult(example) {
   const { result } = example;
   resultEl.replaceChildren(
     el("div", { class: "result-head" },
-      el("h2", {}, exampleLabel(example))),
-    el("p", { class: "result-meta" },
-      `True group: ${example.group === "paralysis" ? "vocal fold paralysis" : "healthy control"}.`),
+      el("h2", { class: `tone-text ${groupTone(example)}` }, exampleLabel(example))),
     el("audio", { class: "example-audio", controls: "", src: `examples/${encodeURIComponent(example.file)}`, "aria-label": "Play this recording" }),
     scoreTile("Live score", "Deployed model, trained on these speakers", result.probability),
     featuresBlock(result.top_features, "Top features: live score"));
@@ -267,13 +269,13 @@ function renderExamples() {
       el("h3", {}, capitalize(sex)),
       ...rows.map((example) =>
         el("button", {
-          class: "example",
+          class: `example ${findingTone(example.result.probability)}`,
           type: "button",
           "aria-pressed": String(example === state.selectedExample),
           onclick: () => selectExample(example),
         },
-        el("span", {}, exampleLabel(example)),
-        el("span", { class: "example-status" }, exampleStatus(example)))));
+        el("span", { class: `tone-text ${groupTone(example)}` }, exampleLabel(example)),
+        el("span", { class: "example-status tone-text" }, exampleStatus(example)))));
   });
   $("examples-list").replaceChildren(...groups.filter(Boolean));
 }
@@ -536,6 +538,8 @@ async function startRecording() {
     const recorder = new AudioWorkletNode(context, "recorder-processor");
     const mute = context.createGain();
     mute.gain.value = 0; // Keeps the graph running without playing the mic through the speakers.
+    // Discards countdown audio. Without a handler it would queue up and fill the recording instantly.
+    recorder.port.onmessage = () => {};
     source.connect(recorder).connect(mute).connect(context.destination);
 
     await runCountdown(session);
