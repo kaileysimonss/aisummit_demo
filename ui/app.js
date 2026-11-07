@@ -354,9 +354,21 @@ function setAudio(blob, name, autoScore = false) {
     $("audio-name").textContent = name;
     $("audio-preview").src = audioUrl;
   } else {
+    // Removing src alone would leave the audio playing.
+    $("audio-preview").pause();
     $("audio-preview").removeAttribute("src");
+    $("audio-preview").load();
   }
   resetPrediction();
+}
+
+/** Returns the tab to its starting state. Sex is cleared so the next speaker can't inherit it. */
+function removeAudio() {
+  showAudioError(null);
+  const checked = document.querySelector('input[name="sex"]:checked');
+  if (checked) checked.checked = false;
+  setAudio(null);
+  $("file-input").focus(); // The button that had focus is now hidden.
 }
 
 async function isWavFile(file) {
@@ -693,6 +705,7 @@ function init() {
 
   document.querySelectorAll('input[name="sex"]').forEach((input) => input.addEventListener("change", handleSexChange));
   $("file-input").addEventListener("change", handleFileChosen);
+  $("audio-remove").addEventListener("click", removeAudio);
   setUpDragAndDrop();
   $("record-button").addEventListener("click", startRecording);
   $("recorder-cancel").addEventListener("click", cancelRecording);

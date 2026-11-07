@@ -6,7 +6,7 @@
   <title>Voice Screen Demo</title>
   <meta name="description" content="Research demo of a voice screen for vocal fold paralysis. Not for diagnosis.">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <header class="page-header">
@@ -56,7 +56,10 @@
         </div>
 
         <div id="audio-summary" class="audio-summary" hidden>
-          <p id="audio-name" class="audio-name"></p>
+          <div class="audio-head">
+            <p id="audio-name" class="audio-name"></p>
+            <button id="audio-remove" class="remove-button" type="button" aria-label="Remove recording" title="Remove recording">×</button>
+          </div>
           <audio id="audio-preview" controls></audio>
         </div>
 
@@ -71,6 +74,6 @@
     <section id="result" class="card result-card" aria-label="Result" aria-live="polite"></section>
   </main>
 
-  <script src="app.js?v=9"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
