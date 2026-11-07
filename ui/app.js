@@ -157,7 +157,7 @@ function renderExampleResult(example) {
     el("div", { class: "result-head" },
       el("h2", { class: `tone-text ${groupTone(example)}` }, exampleLabel(example))),
     el("audio", { class: "example-audio", controls: "", src: `examples/${encodeURIComponent(example.file)}`, "aria-label": "Play this recording" }),
-    scoreTile("Live score", "Deployed model, trained on these speakers", result.probability),
+    scoreTile("Live score", "Deployed model", result.probability),
     featuresBlock(result.top_features, "Top features: live score"));
 }
 
