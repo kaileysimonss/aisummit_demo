@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Screen Demo</title>
+  <meta name="description" content="Research demo of a voice screen for vocal fold paralysis. Not for diagnosis.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css?v=5">
+</head>
+<body>
+  <header class="page-header">
+    <h1>Voice screen for vocal fold paralysis</h1>
+  </header>
+
+  <p id="mock-banner" class="mock-banner" hidden>
+    <strong>Mock mode.</strong> No model is running. Every score on this page is made up.
+  </p>
+
+  <main class="layout">
+    <section class="card input-card" aria-label="Choose a voice sample">
+      <div class="tabs" role="tablist" aria-label="How to try the screen">
+        <button class="tab" role="tab" id="tab-examples" aria-controls="panel-examples" aria-selected="true">Example speakers</button>
+        <button class="tab" role="tab" id="tab-recording" aria-controls="panel-recording" aria-selected="false" tabindex="-1">Try a recording</button>
+      </div>
+
+      <div id="panel-examples" role="tabpanel" aria-labelledby="tab-examples">
+        <div id="examples-list" class="examples-list"><p class="muted">Loading examples…</p></div>
+      </div>
+
+      <div id="panel-recording" role="tabpanel" aria-labelledby="tab-recording" hidden>
+        <fieldset class="sex-field">
+          <legend>Sex</legend>
+          <label class="choice"><input type="radio" name="sex" value="female"> Female</label>
+          <label class="choice"><input type="radio" name="sex" value="male"> Male</label>
+        </fieldset>
+
+        <div class="instructions">
+          <h2>How to record</h2>
+          <p>In a quiet room, hold “ah” at a comfortable, normal pitch for about 2 seconds.</p>
+        </div>
+
+        <div class="audio-actions">
+          <label id="drop-zone" class="drop-zone" for="file-input">
+            <strong>Drag and drop a WAV file here</strong>
+            <span>or click to choose one</span>
+          </label>
+          <input id="file-input" class="visually-hidden" type="file" accept=".wav,audio/wav,audio/x-wav,audio/wave">
+          <button id="record-button" class="button" type="button">Record in browser instead</button>
+        </div>
+
+        <div id="recorder-status" class="recorder-status" hidden>
+          <p id="recorder-text" class="recorder-text" aria-live="assertive"></p>
+          <div class="progress" aria-hidden="true"><div id="recorder-progress" class="progress-fill"></div></div>
+          <button id="recorder-cancel" class="link-button" type="button">Cancel</button>
+        </div>
+
+        <div id="audio-summary" class="audio-summary" hidden>
+          <p id="audio-name" class="audio-name"></p>
+          <audio id="audio-preview" controls></audio>
+        </div>
+
+        <p id="audio-error" class="inline-error" role="alert" hidden></p>
+
+        <button id="submit-button" class="button button-primary" type="button" disabled>Get screening score</button>
+        <p id="submit-hint" class="hint"></p>
+        <p id="privacy-note" class="hint"></p>
+      </div>
+    </section>
+
+    <section id="result" class="card result-card" aria-label="Result" aria-live="polite"></section>
+  </main>
+
+  <script src="app.js?v=5"></script>
+</body>
+</html>

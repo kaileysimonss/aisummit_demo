@@ -1,0 +1,4 @@
+# Same pinned versions as portable_rekurrensparese/requirements.txt (a test checks this).
+numpy==2.3.5
+praat-parselmouth==0.4.7
+soxr==1.1.0

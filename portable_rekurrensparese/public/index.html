@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vocal fold paralysis screen (research demo)</title>
+<style>
+  :root { --bg: #fafaf8; --fg: #1d1d1b; --muted: #6b6b66; --line: #ddddd6; --accent: #2f5d8a; --warn: #8a2f2f; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #18181a; --fg: #ececea; --muted: #a0a09a; --line: #34343a; --accent: #7fb0e0; --warn: #e08a8a; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .muted { color: var(--muted); font-size: .9rem; }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .row b { display: block; }
+  .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  button, select, input[type=file] { font: inherit; }
+  button { padding: 6px 12px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 6px; cursor: pointer; }
+  button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { font-size: .85rem; color: var(--muted); min-width: 6em; text-align: right; }
+  .bar { height: 14px; background: var(--line); border-radius: 7px; overflow: hidden; margin: 6px 0 2px; }
+  .bar > div { height: 100%; background: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; margin: 8px 0 16px; }
+  td, th { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); }
+  .caveat { color: var(--warn); font-size: .85rem; }
+  @media (max-width: 520px) { .row { grid-template-columns: 1fr; } .controls { justify-content: flex-start; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Vocal fold paralysis screen</h1>
+  <p class="muted">Research demo, not a diagnostic test. Model: logistic regression on voice features from one
+  sustained "aah", trained on the Saarbrücken Voice Database (healthy vs. Rekurrensparese).
+  <span id="perf"></span></p>
+
+  <p><label>Sex <select id="sex"><option value="female">female</option><option value="male">male</option></select></label></p>
+
+  <div id="rows"></div>
+
+  <p><button id="go" class="primary" disabled>Analyse</button> <span id="msg" class="muted"></span></p>
+  <section id="out" hidden>
+    <h2 style="font-size:1.1rem">Probability of vocal fold paralysis: <span id="prob"></span></h2>
+    <div class="bar"><div id="fill"></div></div>
+    <p class="muted" id="missing"></p>
+    <h3 style="font-size:1rem">What pushed the score</h3>
+    <table id="contrib"></table>
+    <h3 style="font-size:1rem">Key measures</h3>
+    <table id="keys"></table>
+    <div id="caveats"></div>
+  </section>
+</main>
+<script>
+const ALL_TASKS = {
+  a_n: ["Sustained \"aah\"", "Say \"aah\" at a comfortable pitch, steadily, for about 3 seconds."],
+  a_h: ["High pitch", "Say \"aah\" at a high pitch for 3 seconds."],
+  a_l: ["Low pitch", "Say \"aah\" at a low pitch for 3 seconds."],
+  a_lhl: ["Glide", "Say \"aah\" sliding from low to high and back to low, about 3 seconds."],
+};
+let TASKS = [["a_n", ...ALL_TASKS.a_n]];      // replaced by the model's recordings (GET /api/predict)
+const wavs = {};
+const rows = document.getElementById("rows");
+const go = document.getElementById("go");
+
+function encodeWav(samples, sr) {            // mono float32 -> 16-bit PCM WAV
+  const buf = new ArrayBuffer(44 + samples.length * 2), v = new DataView(buf);
+  const str = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, "RIFF"); v.setUint32(4, 36 + samples.length * 2, true); str(8, "WAVE"); str(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true);
+  v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data");
+  v.setUint32(40, samples.length * 2, true);
+  samples.forEach((s, i) => v.setInt16(44 + i * 2, Math.max(-32768, Math.min(32767, Math.round(s * 32768))), true));
+  return buf;
+}
+async function toWav(blob) {                  // any browser-decodable audio -> mono WAV bytes
+  const ctx = new AudioContext();
+  const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
+  const n = audio.length, mono = new Float32Array(n);
+  for (let c = 0; c < audio.numberOfChannels; c++) audio.getChannelData(c).forEach((s, i) => mono[i] += s / audio.numberOfChannels);
+  ctx.close();
+  return { bytes: encodeWav(mono, audio.sampleRate), seconds: n / audio.sampleRate };
+}
+const b64 = buf => { let s = ""; new Uint8Array(buf).forEach(b => s += String.fromCharCode(b)); return btoa(s); };
+
+function buildRows() {
+rows.innerHTML = "";
+TASKS.forEach(([code, title, hint]) => {
+  const row = document.createElement("div");
+  row.className = "row";
+  row.innerHTML = `<div><b>${title}</b><span class="muted">${hint}</span></div>
+    <div class="controls"><button data-rec>Record</button>
+    <input type="file" accept="audio/*" aria-label="Upload ${title}"><span class="status">not recorded</span></div>`;
+  const recBtn = row.querySelector("[data-rec]"), file = row.querySelector("input"), status = row.querySelector(".status");
+  let rec = null;
+  const store = async blob => {
+    status.textContent = "converting…";
+    try {
+      const w = await toWav(blob);
+      wavs[code] = w.bytes;
+      status.textContent = `${w.seconds.toFixed(1)} s ✓`;
+    } catch (e) { status.textContent = "could not read audio"; delete wavs[code]; }
+    go.disabled = Object.keys(wavs).length === 0;
+  };
+  recBtn.onclick = async () => {
+    if (rec) { rec.stop(); return; }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    const chunks = [];
+    rec = new MediaRecorder(stream);
+    rec.ondataavailable = e => chunks.push(e.data);
+    rec.onstop = () => { stream.getTracks().forEach(t => t.stop()); rec = null; recBtn.textContent = "Record"; store(new Blob(chunks)); };
+    rec.start(); recBtn.textContent = "Stop"; status.textContent = "recording…";
+  };
+  file.onchange = () => file.files[0] && store(file.files[0]);
+  rows.appendChild(row);
+});
+}
+buildRows();
+fetch("/api/predict").then(r => r.json()).then(info => {
+  TASKS = info.recordings.map(c => [c, ...ALL_TASKS[c]]);
+  buildRows();
+  const m = info.validated_performance && info.validated_performance.age_matched_pairs;
+  if (m) document.getElementById("perf").textContent =
+    `Validated out-of-fold AUC on ${m.speakers} age- and sex-matched speakers: ${m.auc} (95% CI ${m.ci95[0]}-${m.ci95[1]}).`;
+}).catch(() => {});
+
+go.onclick = async () => {
+  const msg = document.getElementById("msg");
+  go.disabled = true; msg.textContent = "analysing (a few seconds)…";
+  const recordings = Object.fromEntries(Object.entries(wavs).map(([k, v]) => [k, b64(v)]));
+  try {
+    const r = await fetch("/api/predict", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sex: document.getElementById("sex").value, recordings }) });
+    const res = await r.json();
+    if (!r.ok) throw new Error(res.error || r.statusText);
+    show(res); msg.textContent = "";
+  } catch (e) { msg.textContent = "Error: " + e.message; }
+  go.disabled = false;
+};
+
+function show(res) {
+  const p = res.probability_rekurrensparese;
+  document.getElementById("out").hidden = false;
+  document.getElementById("prob").textContent = (p * 100).toFixed(1) + "%";
+  document.getElementById("fill").style.width = (p * 100) + "%";
+  document.getElementById("missing").textContent = res.recordings_missing_imputed.length
+    ? "Not recorded (filled with typical values): " + res.recordings_missing_imputed.join(", ") : "";
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+  document.getElementById("contrib").innerHTML = "<tr><th>feature</th><th>value</th><th>effect</th></tr>" +
+    res.top_contributions.map(c => `<tr><td>${esc(c.feature)}</td><td>${c.value ?? "–"}</td><td>${c.contribution > 0 ? "towards paralysis" : "towards healthy"} (${c.contribution.toFixed(2)})</td></tr>`).join("");
+  document.getElementById("keys").innerHTML = "<tr><th>measure</th><th>you</th><th>healthy median</th><th>paralysis median</th></tr>" +
+    Object.entries(res.key_features).map(([f, r]) => `<tr><td>${esc(f)}</td><td>${r.this_speaker ?? "–"}</td><td>${r.healthy_median}</td><td>${r.patient_median}</td></tr>`).join("");
+  document.getElementById("caveats").innerHTML = res.caveats.map(c => `<p class="caveat">${esc(c)}</p>`).join("");
+}
+</script>
+</body>
+</html>

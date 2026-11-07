@@ -1,0 +1,10 @@
+{
+  "outputDirectory": "ui",
+  "functions": {
+    "api/predict.py": {
+      "maxDuration": 60,
+      "memory": 1024,
+      "includeFiles": "portable_rekurrensparese/{rp_model.py,model/**}"
+    }
+  }
+}

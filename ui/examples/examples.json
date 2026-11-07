@@ -1,0 +1,210 @@
+{
+  "model": "rekurrensparese_an_lr_weighted.json",
+  "examples": [
+    {
+      "file": "female_healthy_1.wav",
+      "sex": "female",
+      "group": "healthy",
+      "validatedProbability": 0.003,
+      "result": {
+        "probability": 0.004,
+        "top_features": [
+          {
+            "name": "a_n__cpp_db",
+            "label": "CPP (voice clarity)",
+            "direction": "down",
+            "size": 1.09
+          },
+          {
+            "name": "a_n__hnr_db",
+            "label": "HNR (voice vs. breath noise)",
+            "direction": "down",
+            "size": 0.899
+          },
+          {
+            "name": "a_n__mfcc8_mean",
+            "label": "MFCC 8 (voice timbre)",
+            "direction": "down",
+            "size": 0.566
+          },
+          {
+            "name": "a_n__shimmer_local",
+            "label": "Shimmer (loudness stability)",
+            "direction": "down",
+            "size": 0.527
+          },
+          {
+            "name": "a_n__mfcc7_mean",
+            "label": "MFCC 7 (voice timbre)",
+            "direction": "down",
+            "size": 0.518
+          }
+        ]
+      }
+    },
+    {
+      "file": "female_paralysis_1.wav",
+      "sex": "female",
+      "group": "paralysis",
+      "validatedProbability": 0.989,
+      "result": {
+        "probability": 0.956,
+        "top_features": [
+          {
+            "name": "a_n__shimmer_local",
+            "label": "Shimmer (loudness stability)",
+            "direction": "up",
+            "size": 2.951
+          },
+          {
+            "name": "a_n__hnr_db",
+            "label": "HNR (voice vs. breath noise)",
+            "direction": "up",
+            "size": 1.954
+          },
+          {
+            "name": "a_n__cpp_db",
+            "label": "CPP (voice clarity)",
+            "direction": "up",
+            "size": 1.768
+          },
+          {
+            "name": "a_n__f0_step_st",
+            "label": "Pitch steadiness (moment to moment)",
+            "direction": "down",
+            "size": 1.201
+          },
+          {
+            "name": "a_n__f0_range_st",
+            "label": "Pitch range",
+            "direction": "up",
+            "size": 1.082
+          }
+        ]
+      }
+    },
+    {
+      "file": "male_healthy_1.wav",
+      "sex": "male",
+      "group": "healthy",
+      "validatedProbability": 0.005,
+      "result": {
+        "probability": 0.002,
+        "top_features": [
+          {
+            "name": "a_n__cpp_db",
+            "label": "CPP (voice clarity)",
+            "direction": "down",
+            "size": 1.978
+          },
+          {
+            "name": "a_n__mfcc3_mean",
+            "label": "MFCC 3 (voice timbre)",
+            "direction": "down",
+            "size": 0.784
+          },
+          {
+            "name": "a_n__hnr_db",
+            "label": "HNR (voice vs. breath noise)",
+            "direction": "down",
+            "size": 0.727
+          },
+          {
+            "name": "a_n__mfcc7_mean",
+            "label": "MFCC 7 (voice timbre)",
+            "direction": "down",
+            "size": 0.722
+          },
+          {
+            "name": "a_n__mfcc4_mean",
+            "label": "MFCC 4 (voice timbre)",
+            "direction": "up",
+            "size": 0.519
+          }
+        ]
+      }
+    },
+    {
+      "file": "male_paralysis_1.wav",
+      "sex": "male",
+      "group": "paralysis",
+      "validatedProbability": 0.988,
+      "result": {
+        "probability": 0.986,
+        "top_features": [
+          {
+            "name": "a_n__shimmer_local",
+            "label": "Shimmer (loudness stability)",
+            "direction": "up",
+            "size": 3.962
+          },
+          {
+            "name": "a_n__hnr_db",
+            "label": "HNR (voice vs. breath noise)",
+            "direction": "up",
+            "size": 2.285
+          },
+          {
+            "name": "a_n__cpp_db",
+            "label": "CPP (voice clarity)",
+            "direction": "up",
+            "size": 2.026
+          },
+          {
+            "name": "a_n__mfcc2_mean",
+            "label": "MFCC 2 (voice timbre)",
+            "direction": "up",
+            "size": 0.91
+          },
+          {
+            "name": "a_n__voiced_fraction",
+            "label": "Voiced fraction (share of clip with voicing)",
+            "direction": "down",
+            "size": 0.675
+          }
+        ]
+      }
+    },
+    {
+      "file": "male_paralysis_2.wav",
+      "sex": "male",
+      "group": "paralysis",
+      "validatedProbability": 0.95,
+      "result": {
+        "probability": 0.971,
+        "top_features": [
+          {
+            "name": "a_n__shimmer_local",
+            "label": "Shimmer (loudness stability)",
+            "direction": "up",
+            "size": 4.649
+          },
+          {
+            "name": "a_n__f0_step_st",
+            "label": "Pitch steadiness (moment to moment)",
+            "direction": "down",
+            "size": 2.311
+          },
+          {
+            "name": "a_n__hnr_db",
+            "label": "HNR (voice vs. breath noise)",
+            "direction": "up",
+            "size": 1.952
+          },
+          {
+            "name": "a_n__cpp_db",
+            "label": "CPP (voice clarity)",
+            "direction": "up",
+            "size": 1.852
+          },
+          {
+            "name": "a_n__mfcc3_mean",
+            "label": "MFCC 3 (voice timbre)",
+            "direction": "up",
+            "size": 0.86
+          }
+        ]
+      }
+    }
+  ]
+}

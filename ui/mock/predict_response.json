@@ -1,0 +1,10 @@
+{
+  "probability": 0.42,
+  "top_features": [
+    { "name": "cpp", "label": "CPP (voice clarity)", "direction": "down", "size": 0.64 },
+    { "name": "shimmer_local", "label": "Shimmer (loudness stability)", "direction": "up", "size": 0.52 },
+    { "name": "f0_step", "label": "Pitch steadiness (moment to moment)", "direction": "up", "size": 0.38 },
+    { "name": "hnr", "label": "HNR (voice vs. breath noise)", "direction": "down", "size": 0.27 },
+    { "name": "f0_mean", "label": "Average pitch", "direction": "up", "size": 0.13 }
+  ]
+}
